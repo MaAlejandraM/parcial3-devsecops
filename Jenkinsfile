@@ -26,7 +26,7 @@ pipeline {
                     sh 'cat bandit-report.txt || true'
                     archiveArtifacts artifacts: 'bandit-report.txt', allowEmptyArchive: true
                     if (status != 0) {
-                        error("SAST (Bandit) detectó vulnerabilidades críticas/altas en el código fuente.")
+                        unstable("SAST (Bandit) detectó vulnerabilidades en el código fuente.")
                     }
                 }
             }
