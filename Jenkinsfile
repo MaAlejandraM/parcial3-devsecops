@@ -26,7 +26,7 @@ pipeline {
                     sh 'cat bandit-report.txt || true'
                     archiveArtifacts artifacts: 'bandit-report.txt', allowEmptyArchive: true
                     if (status != 0) {
-                        unstable("SAST (Bandit) detectó vulnerabilidades en el código fuente.")
+                        error("SAST (Bandit) detectó vulnerabilidades críticas/altas en el código fuente.")
                     }
                 }
             }
@@ -50,11 +50,14 @@ pipeline {
                         script: '''
                             mkdir -p zap-wrk
                             chmod 777 zap-wrk
-                            docker run --rm --network ${NETWORK_NAME} -v $(pwd)/zap-wrk:/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://${APP_NAME}:5000 -r zap-report.html -I
+                            docker run --rm -u 0 --network ${NETWORK_NAME} -v $(pwd)/zap-wrk:/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://${APP_NAME}:5000 -r zap-report.html -I
                         ''',
                         returnStatus: true
                     )
                     archiveArtifacts artifacts: 'zap-wrk/zap-report.html', allowEmptyArchive: true
+                    if (zapStatus != 0) {
+                        error("DAST (OWASP ZAP) detectó vulnerabilidades críticas en ejecución.")
+                    }
                 }
             }
         }
